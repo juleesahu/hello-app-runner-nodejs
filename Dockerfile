@@ -1,27 +1,33 @@
-# Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
-# SPDX-License-Identifier: MIT-0
 
-# You can use "node:12" or your custom image as a base image of course.
-# We chose this to avoid Docker Hub's throttling during the tutorial steps.
+# Use Amazon Linux as the base image to avoid Docker Hub's throttling
 FROM public.ecr.aws/amazonlinux/amazonlinux:latest
 
-# You can remove this "RUN" instruction if you use a base image with
-# Node.js 12 installation.
-RUN curl -sL https://rpm.nodesource.com/setup_12.x | bash - \
+# Install Node.js (updated to a more recent LTS version)
+RUN curl -sL https://rpm.nodesource.com/setup_16.x | bash - \
     && yum install -y nodejs \
     && yum -y clean all \
     && rm -rf /var/cache/yum
 
+# Set the working directory
 WORKDIR /app
 
+# Copy package files and install dependencies
 COPY package*.json ./
 RUN npm install
 
+# Copy the application code
 COPY . .
 
+# Build the application
 RUN npm run build
+
+# Expose port 80
 EXPOSE 80
 
+# Add additional resources (ensure this directory exists in your project)
+RUN mkdir -p ./public/images
 ADD https://raw.githubusercontent.com/aws-containers/hello-app-runner/2356069859f2ac2e4c0300b510911a7a48d75337/banner_base_light.png ./public/images/
 
+# Start the application
 CMD [ "npm", "start" ]
+
